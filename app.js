@@ -2,7 +2,6 @@ const express = require('express');
 const fetch = require('node-fetch');
 const querystring = require('querystring');
 const status = require('http-status-codes');
-const { getMaxListeners } = require('process');
 const app = express();
 const port = 3000;
 
