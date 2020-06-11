@@ -1,0 +1,22 @@
+{
+  "name": "replicache-sample-express-gcal",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rocicorp/replicache-sample-express-gcal.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rocicorp/replicache-sample-express-gcal/issues"
+  },
+  "homepage": "https://github.com/rocicorp/replicache-sample-express-gcal#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
