@@ -16,14 +16,28 @@ app.post('/replicache-client-view', async (req, res) => {
             console.log('Getting events for', c.id);
             return await getEvents(c.id, auth);
         }))).forEach(r => events.push(...r));
+        console.log(`got ${events.length} events`);
+
+        const eventDate = (d) => {
+            if (!d) {
+                return new Date(0);
+            }
+            return Date.parse(d.dateTime || d.date || '');
+        }
+
+        // Sort events in ascending order of start date.
+        events.sort((a, b) => {
+            return eventDate(a.start) - eventDate(b.start);
+        });
 
         const out = {
             lastMutationID: 0,
             clientView: {},
         };
         for (let e of events) {
-            out.clientView[`/event/${e.id}`] = e;
+            out.clientView[`/event/${e.calendarID}/${e.id}`] = e;
         }
+        console.log(`got ${Object.keys(out.clientView).length} events after dedupe`);
 
         res.json(out);
     } catch (e) {
@@ -48,6 +62,9 @@ async function getEvents(calendarID, auth) {
                 maxResults: 2500,
                 pageToken: nextPageToken,
             });
+        response.items.forEach(item => {
+            item.calendarID = calendarID;
+        });
         events.push(...response.items);
         nextPageToken = response.nextPageToken;
     } while (nextPageToken);
@@ -64,9 +81,9 @@ async function gcal(path, auth, qs) {
             },
         },
     )
-    console.log('Sending request', req);
+    //console.log('Sending request', req);
     const resp = await fetch(req);
-    console.log('Got response', resp);
+    //console.log('Got response', resp);
     if (resp.status == status.UNAUTHORIZED) {
         throw new UnauthorizedError(resp.url, await resp.text());
     }
