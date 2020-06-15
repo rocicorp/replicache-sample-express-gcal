@@ -54,6 +54,10 @@ async function getEvents(calendarID, auth) {
     const events = [];
     let nextPageToken;
 
+    // get events from up to one year ago
+    const now = new Date();
+    const timeMin = `${now.getFullYear()-1}-${now.getMonth()+1}-${now.getDate()}T00:00:00Z`;
+
     do {
         const response = await gcal(
             `/calendars/${encodeURIComponent(calendarID)}/events`,
@@ -61,6 +65,7 @@ async function getEvents(calendarID, auth) {
             {
                 maxResults: 2500,
                 pageToken: nextPageToken,
+                timeMin,
             });
         response.items.forEach(item => {
             item.calendarID = calendarID;
