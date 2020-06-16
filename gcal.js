@@ -16,9 +16,11 @@ async function getEvents(calendarID, auth) {
             `/calendars/${encodeURIComponent(calendarID)}/events`,
             auth,
             {
-                maxResults: 2500,
-                pageToken: nextPageToken,
-                timeMin,
+                qs: {
+                    maxResults: 2500,
+                    pageToken: nextPageToken,
+                    timeMin,
+                }
             });
         response.items.forEach(item => {
             item.calendarID = calendarID;
@@ -30,16 +32,17 @@ async function getEvents(calendarID, auth) {
     return events;
 }
 
-async function gcal(path, auth, qs, body) {
+async function gcal(path, auth, opts) {
+    if (!opts) opts = {};
     const req = new fetch.Request(
-        `https://www.googleapis.com/calendar/v3${path}?${querystring.stringify(qs)}`,
+        `https://www.googleapis.com/calendar/v3${path}?${querystring.stringify(opts.qs)}`,
         {
             headers: {
                 Authorization: auth,
-                'Content-type': body ? 'application/json': '',
+                'Content-type': opts.body ? 'application/json': '',
             },
-            method: body ? 'POST' : 'GET',
-            body: body,
+            method: opts.method || 'GET',
+            body: opts.body,
         },
     )
     //console.log('Sending request', req);
@@ -51,10 +54,11 @@ async function gcal(path, auth, qs, body) {
     if (Math.floor(resp.status / 100) == 4) {
         throw new UserError(`request failed - url: ${resp.url}, status: ${resp.status}, message: ${await resp.text()}`);
     }
-    if (resp.status != status.OK) {
+    if (Math.floor(resp.status / 100) != 2) {
         throw new Error(`Unexpected resp from gcal api: url: ${resp.url}: ${resp.status}: ${await resp.text()}`);
     }
-    return await resp.json();
+    const text = await resp.text();
+    return text == '' ? null : JSON.parse(text);
 }
 
 module.exports = {gcal, getEvents, UnauthorizedError};

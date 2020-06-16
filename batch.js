@@ -53,8 +53,8 @@ async function processMutation(m, auth) {
         'nop': nop,
         'serverError': serverError,
         'addEvent': addEvent,
-        //'upateEvent': updateEvent,
-        //'deleteEvent': deleteEvent,
+        'updateEvent': updateEvent,
+        'deleteEvent': deleteEvent,
     };
     const h = handlers[m.name];
     if (!h) {
@@ -74,7 +74,17 @@ async function serverError(data, auth) {
 
 async function addEvent(data, auth) {
     await gcal(`/calendars/${encodeURIComponent(data.calendarID)}/events`,
-        auth, null, JSON.stringify(data.body));
+        auth, {method: 'POST', body: JSON.stringify(data.body)});
+}
+
+async function updateEvent(data, auth) {
+    await gcal(`/calendars/${encodeURIComponent(data.calendarID)}/events/${data.eventID}`,
+        auth, {method: 'PATCH', body: JSON.stringify(data.body)});
+}
+
+async function deleteEvent(data, auth) {
+    await gcal(`/calendars/${encodeURIComponent(data.calendarID)}/events/${data.eventID}`,
+        auth, {method: 'DELETE'});
 }
 
 function validatePayload(payload) {

@@ -23,7 +23,7 @@ app.post('/db', async (req, res) => {
 app.post('/replicache-client-view', async (req, res) => {
     try {
         const auth = req.header("Authorization");
-        const cvReq = req.body();
+        const cvReq = req.body;
         if (!cvReq.clientID) {
             throw new UserError('clientID is required');
         }

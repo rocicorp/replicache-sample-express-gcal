@@ -7,7 +7,7 @@ async function clientView(clientID, auth) {
 
     let lastMutationID = 0;
     await transact(async (db) => {
-        lastMutationID = await getMutationID(clientID);
+        lastMutationID = await getMutationID(db, clientID);
     });
 
     const events = [];
