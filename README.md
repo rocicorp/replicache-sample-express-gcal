@@ -15,7 +15,7 @@ It's running live at https://replicache-sample-gcal.herokuapp.com/.
 3. Install the [Heroku development environment](https://devcenter.heroku.com/articles/heroku-local).
 4. [Install Postgres locally](https://devcenter.heroku.com/articles/heroku-postgresql#local-setup)
   * **Note**: At least for me, the `DATABASE_URL` needed to be `postgresql://localhost`, not `postgres://localhost`
-5. `heroku local web`
+5. `npm run build-ts && heroku local web`
 
 # Production
 
