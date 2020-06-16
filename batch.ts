@@ -1,8 +1,8 @@
-const {UserError} = require('./errors.js');
-const {transact, getMutationID, setMutationID} = require('./db.js');
-const {gcal} = require('./gcal.js');
+import {transact, getMutationID, setMutationID} from './db';
+import {gcal} from './gcal';
+import {userError, ErrorKind} from './errors';
 
-async function batch(payload, auth) {
+export async function batch(payload: any, auth: string) {
     validatePayload(payload);
 
     let infos = [];
@@ -12,7 +12,7 @@ async function batch(payload, auth) {
             const expectedMutationID = currentMutationID + 1;
 
             if (m.id > expectedMutationID) {
-                throw new UserError(`mutation.id is too high - expected ${expectedMutationID}`);
+                throw userError(`mutation.id is too high - expected ${expectedMutationID}`);
             }
 
             if (m.id < expectedMutationID) {
@@ -27,7 +27,7 @@ async function batch(payload, auth) {
             try {
                 await processMutation(m, auth);
             } catch (e) {
-                if (e instanceof UserError) {
+                if (e.kind == ErrorKind.UserError) {
                     // UserError is permanent.
                     // fall through to below, we will mark the tx handled.
                     infos.push({
@@ -48,7 +48,13 @@ async function batch(payload, auth) {
     };
 }
 
-async function processMutation(m, auth) {
+type Mutation = {
+    id: string
+    name: string
+    args: any
+}
+
+async function processMutation(m: Mutation, auth: string) {
     const handlers = {
         'nop': nop,
         'serverError': serverError,
@@ -58,26 +64,26 @@ async function processMutation(m, auth) {
     };
     const h = handlers[m.name];
     if (!h) {
-        throw new UserError(`unknown mutation: ${m.name}`);
+        throw userError(`unknown mutation: ${m.name}`);
     }
 
     await h(m.args, auth);
 }
 
-async function nop(data, auth) {
+async function nop(data: any, auth: string) {
     console.log('nop', data, auth);
 }
 
-async function serverError(data, auth) {
+async function serverError(data: any, auth: string) {
     throw new Error('test error');
 }
 
-async function addEvent(data, auth) {
+async function addEvent(data: any, auth: string) {
     await gcal(`/calendars/${encodeURIComponent(data.calendarID)}/events`,
         auth, {method: 'POST', body: JSON.stringify(data.body)});
 }
 
-async function updateEvent(data, auth) {
+async function updateEvent(data: any, auth: string) {
     await gcal(`/calendars/${encodeURIComponent(data.calendarID)}/events/${data.eventID}`,
         auth, {method: 'PATCH', body: JSON.stringify(data.body)});
 }
@@ -87,20 +93,20 @@ async function deleteEvent(data, auth) {
         auth, {method: 'DELETE'});
 }
 
-function validatePayload(payload) {
+function validatePayload(payload: any) {
     if (!payload) {
-        throw new UserError('body is required');
+        throw userError('body is required');
     }
     if (!payload.clientID) {
-        throw new UserError('clientID is required');
+        throw userError('clientID is required');
     }
     if (!Array.isArray(payload.mutations)) {
-        throw new UserError('mutations is required and must be an array');
+        throw userError('mutations is required and must be an array');
     }
     for (let m of payload.mutations) {
         if (typeof m.id != 'number' ||
             typeof m.name != 'string') {
-            throw new UserError('Invalid mutation');
+            throw userError('Invalid mutation');
         }
     }
 }

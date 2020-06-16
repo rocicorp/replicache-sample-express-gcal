@@ -1,7 +1,7 @@
-const {transact, getMutationID} = require('./db.js');
-const {gcal, getEvents} = require('./gcal.js');
+import {transact, getMutationID} from './db';
+import {gcal, getEvents} from './gcal';
 
-async function clientView(clientID, auth) {
+export async function clientView(clientID: string, auth: string) {
     const calendars = (await gcal('/users/me/calendarList', auth)).items;
     console.log(`got ${calendars.length} calendars`);
 
@@ -11,21 +11,21 @@ async function clientView(clientID, auth) {
     });
 
     const events = [];
-    (await Promise.all(calendars.map(async c => {
+    (await Promise.all(calendars.map(async (c: any) => {
         console.log('Getting events for', c.id);
         return await getEvents(c.id, auth);
-    }))).forEach(r => events.push(...r));
+    }))).forEach((r: Array<any>) => events.push(...r));
     console.log(`got ${events.length} events`);
 
-    const eventDate = (d) => {
+    const eventDate = (d: any) => {
         if (!d) {
-            return new Date(0);
+            return 0;
         }
         return Date.parse(d.dateTime || d.date || '');
     }
 
     // Sort events in ascending order of start date.
-    events.sort((a, b) => {
+    events.sort((a: any, b: any) => {
         return eventDate(a.start) - eventDate(b.start);
     });
 
@@ -39,5 +39,3 @@ async function clientView(clientID, auth) {
     console.log(`got ${Object.keys(out.clientView).length} events after dedupe`);
     return out;
 }
-
-module.exports = {clientView};

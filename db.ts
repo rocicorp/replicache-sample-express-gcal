@@ -1,4 +1,4 @@
-const { Pool } = require('pg');
+import { Pool, PoolClient } from 'pg';
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -10,15 +10,15 @@ const schema = [
     "CREATE TABLE Replicache (ClientID varchar(255) NOT NULL PRIMARY KEY, LastMutationID integer NOT NULL)",
 ]
 
-async function createSchema() {
-    await transact(async (db) => {
+export async function createSchema() {
+    await transact(async (db: PoolClient) => {
         for (let stmt of schema) {
             await db.query(stmt);
         }
     });
 }
 
-async function getMutationID(db, clientID) {
+export async function getMutationID(db: PoolClient, clientID: string): Promise<number> {
     const res = await db.query('SELECT LastMutationID FROM Replicache WHERE ClientID = $1', [clientID]);
     if (!res || res.rows.length != 1) {
         return 0;
@@ -26,13 +26,13 @@ async function getMutationID(db, clientID) {
     return res.rows[0]['lastmutationid'];
 }
 
-async function setMutationID(db, clientID, mutationID) {
+export async function setMutationID(db: PoolClient, clientID: string, mutationID: number) {
     await db.query(
         'INSERT INTO Replicache (ClientID, LastMutationID) VALUES ($1, $2) ' +
         'ON CONFLICT (ClientID) DO UPDATE SET LastMutationID=$2', [clientID, mutationID]);
 }
 
-async function transact(f) {
+export async function transact(f: (db: PoolClient) => Promise<void>|void) {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -47,10 +47,3 @@ async function transact(f) {
         client.release();
     }
 }
-
-module.exports = {
-    createSchema,
-    transact,
-    getMutationID,
-    setMutationID,
-};

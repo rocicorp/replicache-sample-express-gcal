@@ -1,10 +1,11 @@
 const express = require('express');
 const status = require('http-status-codes');
 const app = express();
-const {createSchema} = require('./db.js');
-const {UnauthorizedError, UserError} = require('./errors.js');
-const {batch} = require('./batch.js');
-const {clientView} = require('./clientview.js');
+
+import {createSchema} from './db';
+import {ErrorKind, unauthorizedError, userError} from './errors';
+import {batch} from './batch';
+import {clientView} from './clientview';
 
 const port = process.env.PORT || 5000;
 
@@ -25,7 +26,7 @@ app.post('/replicache-client-view', async (req, res) => {
         const auth = req.header("Authorization");
         const cvReq = req.body;
         if (!cvReq.clientID) {
-            throw new UserError('clientID is required');
+            throw userError('clientID is required');
         }
         const cv = await clientView(cvReq.clientID, auth);
         res.json(cv);
@@ -45,11 +46,11 @@ app.post('/replicache-batch', async (req, res) => {
 });
 
 function handleError(res, e) {
-    if (e instanceof UnauthorizedError) {
+    if (e.kind == ErrorKind.Unauthorized) {
         res.status(status.UNAUTHORIZED).send(e.toString());
         return;
     }
-    if (e instanceof UserError) {
+    if (e.kind == ErrorKind.UserError) {
         res.status(status.BAD_REQUEST).send(e.toString());
         return;
     }
