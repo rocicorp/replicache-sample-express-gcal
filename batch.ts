@@ -79,21 +79,17 @@ async function serverError(data: any, auth: string) {
 }
 
 async function addEvent(data: any, auth: string) {
-    const calendarID = data.calendarID;
-    delete data.calendarID;
-    await gcal(`/calendars/${encodeURIComponent(calendarID)}/events`,
+    await gcal(`/calendars/primary/events`,
         auth, {method: 'POST', body: JSON.stringify(data)});
 }
 
 async function updateEvent(data: any, auth: string) {
-    const calendarID = data.calendarID;
-    delete data.calendarID;
-    await gcal(`/calendars/${encodeURIComponent(calendarID)}/events/${data.id}`,
+    await gcal(`/calendars/primary/events/${data.id}`,
         auth, {method: 'PATCH', body: JSON.stringify(data)});
 }
 
 async function deleteEvent(data, auth) {
-    await gcal(`/calendars/${encodeURIComponent(data.calendarID)}/events/${data.id}`,
+    await gcal(`/calendars/primary/events/${data.id}`,
         auth, {method: 'DELETE'});
 }
 
