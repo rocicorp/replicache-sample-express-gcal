@@ -21,7 +21,7 @@ app.post('/db', async (req, res) => {
         res.send('OK').end();
     } catch (e) {
         console.error(e);
-        res.send("Error " + e);
+        handleError(res, e);
     }
 });
 
