@@ -2,13 +2,17 @@ import {transact, getMutationID} from './db';
 import {gcal, getEvents} from './gcal';
 
 export async function clientView(clientID: string, auth: string) {
-    const calendars = (await gcal('/users/me/calendarList', auth)).items;
-    console.log(`got ${calendars.length} calendars`);
-
     let lastMutationID = 0;
     await transact(async (db) => {
         lastMutationID = await getMutationID(db, clientID);
     });
+
+    // What's the user's "primary" calendar? This is where we'll
+    // put new events by default.
+    const primary = (await gcal('/calendars/primary', auth)).id;
+
+    const calendars = (await gcal('/users/me/calendarList', auth)).items;
+    console.log(`got ${calendars.length} calendars`);
 
     const events = [];
     (await Promise.all(calendars.map(async (c: any) => {
@@ -31,7 +35,9 @@ export async function clientView(clientID: string, auth: string) {
 
     const out = {
         lastMutationID,
-        clientView: {},
+        clientView: {
+            '/user/primary': primary,
+        },
     };
     for (let e of events) {
         out.clientView[`/event/${e.calendarID}/${e.id}`] = e;
